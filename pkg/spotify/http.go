@@ -2,9 +2,11 @@ package spotify
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"net/http"
+
+	jsoniter "github.com/json-iterator/go"
+	"github.com/rs/zerolog/log"
 )
 
 const BaseURL = "https://api.spotify.com/v1"
@@ -48,11 +50,14 @@ func (c *Client) GetJSON(ctx context.Context, method, path string, response inte
 			Message: "unexpected status code",
 		}
 		// Attempt to decode the error response, but don't worry if it fails.
-		json.NewDecoder(resp.Body).Decode(errorResponse)
+		err := jsoniter.NewDecoder(resp.Body).Decode(errorResponse)
+		if err != nil {
+			log.Err(err).Msg("failed to decode Spotify error response")
+		}
 		return errorResponse
 	}
 
-	return json.NewDecoder(resp.Body).Decode(response)
+	return jsoniter.NewDecoder(resp.Body).Decode(response)
 }
 
 func endpoint(path string) string {
