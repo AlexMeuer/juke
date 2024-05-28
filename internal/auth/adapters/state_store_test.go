@@ -11,113 +11,133 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// MockKeyValueStore is a mock implementation of the KeyValueStore interface
-type MockKeyValueStore struct {
-	mock.Mock
-}
-
-func (m *MockKeyValueStore) Set(ctx context.Context, key, value string) error {
-	args := m.Called(ctx, key, value)
-	return args.Error(0)
-}
-
-func (m *MockKeyValueStore) Get(ctx context.Context, key string) (string, error) {
-	args := m.Called(ctx, key)
-	return args.String(0), args.Error(1)
-}
-
 func TestGenerateState(t *testing.T) {
-	mockStore := new(MockKeyValueStore)
-	ss := &adapters.StateStore{
-		KeyValueStore: mockStore,
-	}
-
 	ctx := context.Background()
 	ID := "test-id"
 
-	mockStore.On("Set", ctx, ID, mock.Anything).Return(nil)
+	t.Run("Success", func(t *testing.T) {
+		mockStore := new(MockKeyValueStore[string])
+		ss := &adapters.StateStore{
+			KeyValueStore: mockStore,
+		}
 
-	state, err := ss.GenerateState(ctx, ID)
+		mockStore.On("Set", ctx, ID, mock.Anything).Return(nil)
 
-	assert.NoError(t, err)
-	assert.NotEmpty(t, state)
-	assert.Equal(t, base64.URLEncoding.EncodedLen(64), len(state))
+		state, err := ss.GenerateState(ctx, ID)
 
-	mockStore.AssertCalled(t, "Set", ctx, ID, state)
-}
+		t.Run("NoError", func(t *testing.T) {
+			assert.NoError(t, err)
+		})
 
-func TestGenerateState_SetError(t *testing.T) {
-	mockStore := new(MockKeyValueStore)
-	ss := &adapters.StateStore{
-		KeyValueStore: mockStore,
-	}
+		t.Run("NotEmpty", func(t *testing.T) {
+			assert.NotEmpty(t, state)
+		})
 
-	ctx := context.Background()
-	ID := "test-id"
+		t.Run("CorrectLength", func(t *testing.T) {
+			assert.Equal(t, base64.URLEncoding.EncodedLen(64), len(state))
+		})
 
-	expectedError := errors.New("set error")
-	mockStore.On("Set", ctx, ID, mock.Anything).Return(expectedError)
+		t.Run("SetCalled", func(t *testing.T) {
+			mockStore.AssertCalled(t, "Set", ctx, ID, state)
+		})
+	})
 
-	state, err := ss.GenerateState(ctx, ID)
+	t.Run("SetError", func(t *testing.T) {
+		mockStore := new(MockKeyValueStore[string])
+		ss := &adapters.StateStore{
+			KeyValueStore: mockStore,
+		}
 
-	assert.Error(t, err)
-	assert.Equal(t, "", state)
-	assert.Contains(t, err.Error(), "failed to save state")
+		expectedError := errors.New("set error")
+		mockStore.On("Set", ctx, ID, mock.Anything).Return(expectedError)
+
+		state, err := ss.GenerateState(ctx, ID)
+
+		t.Run("ErrorOccurred", func(t *testing.T) {
+			assert.Error(t, err)
+		})
+
+		t.Run("StateIsEmpty", func(t *testing.T) {
+			assert.Equal(t, "", state)
+		})
+
+		t.Run("ErrorMessageContains", func(t *testing.T) {
+			assert.Contains(t, err.Error(), "failed to save state")
+		})
+	})
 }
 
 func TestVerifyState(t *testing.T) {
-	mockStore := new(MockKeyValueStore)
-	ss := &adapters.StateStore{
-		KeyValueStore: mockStore,
-	}
-
 	ctx := context.Background()
 	ID := "test-id"
 	state := "test-state"
 
-	mockStore.On("Get", ctx, ID).Return(state, nil)
+	t.Run("Success", func(t *testing.T) {
+		mockStore := new(MockKeyValueStore[string])
+		ss := &adapters.StateStore{
+			KeyValueStore: mockStore,
+		}
 
-	err := ss.VerifyState(ctx, ID, state)
+		mockStore.On("Get", ctx, ID).Return(state, nil)
 
-	assert.NoError(t, err)
-	mockStore.AssertCalled(t, "Get", ctx, ID)
-}
+		err := ss.VerifyState(ctx, ID, state)
 
-func TestVerifyState_GetError(t *testing.T) {
-	mockStore := new(MockKeyValueStore)
-	ss := &adapters.StateStore{
-		KeyValueStore: mockStore,
-	}
+		t.Run("NoError", func(t *testing.T) {
+			assert.NoError(t, err)
+		})
 
-	ctx := context.Background()
-	ID := "test-id"
+		t.Run("GetCalled", func(t *testing.T) {
+			mockStore.AssertCalled(t, "Get", ctx, ID)
+		})
+	})
 
-	expectedError := errors.New("get error")
-	mockStore.On("Get", ctx, ID).Return("", expectedError)
+	t.Run("GetError", func(t *testing.T) {
+		mockStore := new(MockKeyValueStore[string])
+		ss := &adapters.StateStore{
+			KeyValueStore: mockStore,
+		}
 
-	err := ss.VerifyState(ctx, ID, "")
+		expectedError := errors.New("get error")
+		mockStore.On("Get", ctx, ID).Return("", expectedError)
 
-	assert.Error(t, err)
-	assert.Equal(t, expectedError, err)
-	mockStore.AssertCalled(t, "Get", ctx, ID)
-}
+		err := ss.VerifyState(ctx, ID, "")
 
-func TestVerifyState_StateMismatch(t *testing.T) {
-	mockStore := new(MockKeyValueStore)
-	ss := &adapters.StateStore{
-		KeyValueStore: mockStore,
-	}
+		t.Run("ErrorOccurred", func(t *testing.T) {
+			assert.Error(t, err)
+		})
 
-	ctx := context.Background()
-	ID := "test-id"
-	storedState := "stored-state"
-	givenState := "given-state"
+		t.Run("ErrorMatches", func(t *testing.T) {
+			assert.Equal(t, expectedError, err)
+		})
 
-	mockStore.On("Get", ctx, ID).Return(storedState, nil)
+		t.Run("GetCalled", func(t *testing.T) {
+			mockStore.AssertCalled(t, "Get", ctx, ID)
+		})
+	})
 
-	err := ss.VerifyState(ctx, ID, givenState)
+	t.Run("StateMismatch", func(t *testing.T) {
+		mockStore := new(MockKeyValueStore[string])
+		ss := &adapters.StateStore{
+			KeyValueStore: mockStore,
+		}
 
-	assert.Error(t, err)
-	assert.Equal(t, "state mismatch", err.Error())
-	mockStore.AssertCalled(t, "Get", ctx, ID)
+		storedState := "stored-state"
+		givenState := "given-state"
+
+		mockStore.On("Get", ctx, ID).Return(storedState, nil)
+
+		err := ss.VerifyState(ctx, ID, givenState)
+
+		t.Run("ErrorOccurred", func(t *testing.T) {
+			assert.Error(t, err)
+		})
+
+		t.Run("ErrorMessageMatches", func(t *testing.T) {
+			assert.Equal(t, "state mismatch", err.Error())
+		})
+
+		t.Run("GetCalled", func(t *testing.T) {
+			mockStore.AssertCalled(t, "Get", ctx, ID)
+		})
+	})
 }
