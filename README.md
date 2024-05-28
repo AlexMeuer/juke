@@ -1,5 +1,8 @@
 # Juke It Out
 
+[![Lint](https://github.com/AlexMeuer/juke/actions/workflows/lint.yml/badge.svg)](https://github.com/AlexMeuer/juke/actions/workflows/lint.yml)
+[![Test](https://github.com/AlexMeuer/juke/actions/workflows/test.yml/badge.svg)](https://github.com/AlexMeuer/juke/actions/workflows/test.yml)
+
 ## Library assumptions
 
 ### Logging
