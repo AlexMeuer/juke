@@ -1,18 +1,16 @@
 package auth
 
 import (
-	"net/http"
-
 	"golang.org/x/oauth2"
 )
 
 type Config struct {
-	cfg oauth2.Config
+	oauth2.Config
 }
 
 func NewConfig(clientID, clientSecret, redirectURL string) *Config {
 	return &Config{
-		cfg: oauth2.Config{
+		oauth2.Config{
 			ClientID:     clientID,
 			ClientSecret: clientSecret,
 			RedirectURL:  redirectURL,
@@ -20,10 +18,6 @@ func NewConfig(clientID, clientSecret, redirectURL string) *Config {
 	}
 }
 
-func (c *Config) Client() *http.Client {
-	return c.Client()
-}
-
-func (c *Config) AuthorisationURL(state string) string {
-	return c.cfg.AuthCodeURL("my-hardcoded-state")
+func (cfg *Config) AuthorisationURL(state string) string {
+	return cfg.AuthCodeURL("my-hardcoded-state")
 }

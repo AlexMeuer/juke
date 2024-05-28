@@ -31,15 +31,15 @@ func NewSpotifyConfigFromEnv() (*Config, error) {
 		errors.Join(idErr, secretErr, redirectErr)
 }
 
-func (c *Config) WithSpotify() *Config {
-	c.cfg.Scopes = append(c.cfg.Scopes,
+func (cfg *Config) WithSpotify() *Config {
+	cfg.Scopes = append(cfg.Scopes,
 		"user-read-playback-state",
 		"user-modify-playback-state",
 		"user-read-currently-playing",
 	)
-	c.cfg.Endpoint = oauth2.Endpoint{
+	cfg.Endpoint = oauth2.Endpoint{
 		AuthURL:  "https://accounts.spotify.com/authorize",
 		TokenURL: "https://accounts.spotify.com/api/token",
 	}
-	return c
+	return cfg
 }
