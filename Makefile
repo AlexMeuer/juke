@@ -24,5 +24,5 @@ clean:
 	rm -rf bin/*
 
 # PHONY targets to avoid conflicts with files named 'all', 'clean', etc.
-.PHONY: all clean $(BINARIES)
+.PHONY: all test clean $(BINARIES)
 

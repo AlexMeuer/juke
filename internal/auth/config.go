@@ -17,7 +17,3 @@ func NewConfig(clientID, clientSecret, redirectURL string) *Config {
 		},
 	}
 }
-
-func (cfg *Config) AuthorisationURL(state string) string {
-	return cfg.AuthCodeURL("my-hardcoded-state")
-}

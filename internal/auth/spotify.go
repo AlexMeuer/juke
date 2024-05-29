@@ -22,9 +22,9 @@ func NewSpotifyConfigFromEnv() (*Config, error) {
 		secretErr = errors.New("SPOTIFY_CLIENT_SECRET is required")
 	}
 
-	redirectURL := os.Getenv("SPOTIFY_REDIRECT_URL")
+	redirectURL := os.Getenv("SPOTIFY_REDIRECT_URI")
 	if redirectURL == "" {
-		redirectErr = errors.New("SPOTIFY_REDIRECT_URL is required")
+		redirectErr = errors.New("SPOTIFY_REDIRECT_URI is required")
 	}
 
 	return NewConfig(clientID, clientSecret, redirectURL).WithSpotify(),
