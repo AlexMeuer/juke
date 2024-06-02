@@ -72,7 +72,7 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 
 		// Ensure the states match before proceeding.
 		state := c.Query("state")
-		if err := stateVerifier.VerifyState(c, state, loginFlowID); err != nil {
+		if err := stateVerifier.VerifyState(c, loginFlowID, state); err != nil {
 			log.Err(err).
 				Str("state", state).
 				Str("login flow ID", loginFlowID).

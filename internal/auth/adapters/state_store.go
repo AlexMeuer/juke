@@ -10,10 +10,6 @@ import (
 	"github.com/alexmeuer/juke/internal/ports"
 )
 
-const (
-	stateLength = 64
-)
-
 type StateStore struct {
 	ports.KeyValueStore[string]
 }

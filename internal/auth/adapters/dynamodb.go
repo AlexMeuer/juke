@@ -37,7 +37,7 @@ func NewDynamoStore(c context.Context, region string, encryptionKey []byte) (*Dy
 }
 
 func (d *DynamoStore) SaveToken(ctx context.Context, ID string, token *oauth2.Token) error {
-	encryptedToken, err := d.Crypter.Encrypt(token)
+	encryptedToken, err := d.Crypter.Encrypt(token, []byte(ID))
 	if err != nil {
 		return err
 	}
@@ -65,5 +65,5 @@ func (d *DynamoStore) RetrieveToken(ctx context.Context, ID string) (*oauth2.Tok
 	if !ok {
 		return nil, errors.New("token not found in record")
 	}
-	return d.Crypter.Decrypt(encryptedToken.Value)
+	return d.Crypter.Decrypt(encryptedToken.Value, []byte(ID))
 }

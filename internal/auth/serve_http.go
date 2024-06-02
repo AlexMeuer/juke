@@ -5,14 +5,12 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/alexmeuer/juke/internal/adapters"
 	authAdapters "github.com/alexmeuer/juke/internal/auth/adapters"
 	ginzerolog "github.com/dn365/gin-zerolog"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
-	"golang.org/x/oauth2"
 )
 
 func ServeHTTP() error {
@@ -27,17 +25,19 @@ func ServeHTTP() error {
 		log.Fatal().Err(err).Msg("failed to create Spotify config")
 	}
 
-	tmpInMemoryStore := adapters.NewInMemoryKeyValueStore[string]()
+	tokenAesKey, ok := os.LookupEnv("TOKEN_AES_KEY")
+	if !ok {
+		log.Fatal().Msg("TOKEN_AES_KEY environment variable not set")
+	}
+
+	store, err := authAdapters.NewBadgerStore(os.Getenv("BADGER_PATH"), []byte(tokenAesKey))
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to create Badger store")
+	}
 
 	spotifyGroup := r.Group("/spotify")
-	spotifyGroup.GET("/login", NewLoginHandler(spotifyConfig, &authAdapters.StateStore{
-		KeyValueStore: tmpInMemoryStore,
-	}))
-	spotifyGroup.GET("/callback", NewCallbackHandler(spotifyConfig, &authAdapters.StateStore{
-		KeyValueStore: tmpInMemoryStore,
-	}, &authAdapters.TokenStore{
-		KeyValueStore: adapters.NewInMemoryKeyValueStore[*oauth2.Token](),
-	}))
+	spotifyGroup.GET("/login", NewLoginHandler(spotifyConfig, store))
+	spotifyGroup.GET("/callback", NewCallbackHandler(spotifyConfig, store, store))
 
 	return r.Run(fmt.Sprintf(":%d", port()))
 }
