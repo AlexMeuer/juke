@@ -12,6 +12,7 @@ import (
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
+	"golang.org/x/oauth2"
 )
 
 func ServeHTTP() error {
@@ -26,11 +27,17 @@ func ServeHTTP() error {
 		log.Fatal().Err(err).Msg("failed to create Spotify config")
 	}
 
+	tmpInMemoryStore := adapters.NewInMemoryKeyValueStore[string]()
+
 	spotifyGroup := r.Group("/spotify")
 	spotifyGroup.GET("/login", NewLoginHandler(spotifyConfig, &authAdapters.StateStore{
-		KeyValueStore: adapters.NewInMemoryKeyValueStore[string](),
+		KeyValueStore: tmpInMemoryStore,
 	}))
-	// spotifyGroup.GET("/callback", SpotifyCallback)
+	spotifyGroup.GET("/callback", NewCallbackHandler(spotifyConfig, &authAdapters.StateStore{
+		KeyValueStore: tmpInMemoryStore,
+	}, &authAdapters.TokenStore{
+		KeyValueStore: adapters.NewInMemoryKeyValueStore[*oauth2.Token](),
+	}))
 
 	return r.Run(fmt.Sprintf(":%d", port()))
 }
