@@ -108,7 +108,7 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 		log.Info().Interface("me", me).Msg("me")
 
 		// Save the token.
-		if err := saver.SaveToken(c, loginFlowID, token); err != nil {
+		if err := saver.SaveToken(c, me.ID, token); err != nil {
 			log.Err(err).
 				Str("login flow ID", loginFlowID).
 				Str("user ID", me.ID).
