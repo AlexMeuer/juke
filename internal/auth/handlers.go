@@ -29,7 +29,7 @@ func NewLoginHandler(cfg *Config, stateGenerator ports.StateGenerator) gin.Handl
 		state, err := stateGenerator.GenerateState(c, loginFlowID)
 		if err != nil {
 			log.Err(err).Str("login flow ID", loginFlowID).Msg("failed to generate state")
-			c.AbortWithError(http.StatusInternalServerError, err)
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -59,14 +59,14 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 		loginFlowID, ok := session.Get("Login Flow ID").(string)
 		if !ok {
 			log.Error().Msg("login flow ID not found in session")
-			c.AbortWithError(http.StatusBadRequest, errors.New("login flow ID not found in session"))
+			_ = c.AbortWithError(http.StatusBadRequest, errors.New("login flow ID not found in session"))
 			return
 		}
 
 		verifier, ok := session.Get("verifier").(string)
 		if !ok {
 			log.Error().Str("login flow ID", loginFlowID).Msg("verifier not found in session")
-			c.AbortWithError(http.StatusBadRequest, errors.New("verifier not found in session"))
+			_ = c.AbortWithError(http.StatusBadRequest, errors.New("verifier not found in session"))
 			return
 		}
 
@@ -77,7 +77,7 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 				Str("state", state).
 				Str("login flow ID", loginFlowID).
 				Msg("failed to verify state")
-			c.AbortWithError(http.StatusConflict, err)
+			_ = c.AbortWithError(http.StatusConflict, err)
 			return
 		}
 
@@ -89,7 +89,7 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 				Str("code", code).
 				Str("login flow ID", loginFlowID).
 				Msg("failed to exchange code for token")
-			c.AbortWithError(http.StatusInternalServerError, err)
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 
@@ -102,7 +102,7 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 			log.Err(err).
 				Str("login flow ID", loginFlowID).
 				Msg("failed to fetch user information")
-			c.AbortWithError(http.StatusInternalServerError, err)
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 		log.Info().Interface("me", me).Msg("me")
@@ -113,7 +113,7 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 				Str("login flow ID", loginFlowID).
 				Str("user ID", me.ID).
 				Msg("failed to save token")
-			c.AbortWithError(http.StatusInternalServerError, err)
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
 	}
