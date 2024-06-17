@@ -34,6 +34,7 @@ func ServeHTTP() error {
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create Badger store")
 	}
+	defer store.Close()
 
 	spotifyGroup := r.Group("/spotify")
 	spotifyGroup.GET("/login", NewLoginHandler(spotifyConfig, store))

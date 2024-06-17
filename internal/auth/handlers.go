@@ -6,6 +6,7 @@ import (
 
 	"github.com/alexmeuer/juke/internal/auth/ports"
 	"github.com/alexmeuer/juke/pkg/spotify"
+	"github.com/alexmeuer/juke/pkg/user"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog/log"
@@ -53,7 +54,7 @@ func NewLoginHandler(cfg *Config, stateGenerator ports.StateGenerator) gin.Handl
 	}
 }
 
-func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver ports.TokenSaver) gin.HandlerFunc {
+func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver ports.TokenSaver, userStore user.CreateUserPort) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session := sessions.Default(c)
 		loginFlowID, ok := session.Get("Login Flow ID").(string)
@@ -116,5 +117,19 @@ func NewCallbackHandler(cfg *Config, stateVerifier ports.StateVerifier, saver po
 			_ = c.AbortWithError(http.StatusInternalServerError, err)
 			return
 		}
+
+		err = userStore.CreateUser(c, user.PublicInfo{
+			ID:          me.ID,
+			DisplayName: me.DisplayName,
+		})
+		if err != nil {
+			log.Err(err).
+				Str("login flow ID", loginFlowID).
+				Str("user ID", me.ID).
+				Msg("failed to create user")
+			_ = c.AbortWithError(http.StatusInternalServerError, err)
+			return
+		}
+		c.Redirect(http.StatusTemporaryRedirect, "/login-success")
 	}
 }

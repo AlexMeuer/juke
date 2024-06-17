@@ -21,7 +21,7 @@ type BadgerStore struct {
 
 func NewBadgerStore(path string, encryptionKey []byte) (*BadgerStore, error) {
 	if path == "" {
-		path = "/tmp/juke_badger"
+		path = "/tmp/juke_badger_tkns"
 	}
 	opts := badger.DefaultOptions(path)
 	db, err := badger.Open(opts)
@@ -38,6 +38,10 @@ func NewBadgerStore(path string, encryptionKey []byte) (*BadgerStore, error) {
 		DB:      db,
 		Crypter: cipher,
 	}, nil
+}
+
+func (b *BadgerStore) Close() error {
+	return b.DB.Close()
 }
 
 func (b *BadgerStore) SaveToken(c context.Context, ID string, token *oauth2.Token) error {
